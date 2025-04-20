@@ -1,32 +1,16 @@
 FROM python:3.11-slim
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
-# Install Python dependencies
+# Copy only necessary files
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY manage.py .
+COPY myapp/ myapp/
 
-# Copy project files
-COPY . .
+RUN pip install -r requirements.txt
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=your_project_name.settings
+ENV DJANGO_SETTINGS_MODULE=myapp.settings
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Expose port
 EXPOSE 8000
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
-
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "your_project_name.wsgi:application"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
